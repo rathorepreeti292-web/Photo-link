@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PhotoLink — Photo upload karo, link pao</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+    min-height:100vh;
+    color:#e8ecf5;
+    background:#0a0f1e;
+    background-image:
+      radial-gradient(900px 500px at 15% -5%, rgba(99,102,241,.30), transparent 60%),
+      radial-gradient(800px 500px at 90% 10%, rgba(236,72,153,.22), transparent 60%),
+      radial-gradient(700px 500px at 50% 110%, rgba(34,211,238,.18), transparent 60%);
+    background-attachment:fixed;
+    padding:40px 18px 60px;
+  }
+
+  .wrap{max-width:660px;margin:0 auto}
+
+  /* ---------- Header ---------- */
+  header{text-align:center;margin-bottom:30px}
+  .logo{
+    display:inline-flex;align-items:center;gap:11px;
+    padding:9px 20px 9px 13px;border-radius:999px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.12);
+    backdrop-filter:blur(8px);
+  }
+  .logo .dot{
+    width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:15px;
+    background:linear-gradient(135deg,#6366f1,#ec4899);
+    box-shadow:0 5px 16px rgba(99,102,241,.5);
+  }
+  .logo h1{font-size:19px;font-weight:800;letter-spacing:-.3px}
+  header p{margin-top:15px;color:#9aa6c0;font-size:14.5px;line-height:1.55}
+
+  /* ---------- Dropzone ---------- */
+  .drop{
+    display:block;                       /* ZAROORI: label inline hota hai */
+    position:relative;width:100%;
+    border:2px dashed rgba(148,163,184,.42);
+    border-radius:20px;padding:42px 22px;text-align:center;cursor:pointer;
+    background:rgba(255,255,255,.035);
+    transition:border-color .22s, background .22s, transform .22s;
+  }
+  .drop:hover{border-color:#818cf8;background:rgba(129,140,248,.09);transform:translateY(-2px)}
+  .drop.over{border-color:#22d3ee;background:rgba(34,211,238,.13);transform:scale(1.015)}
+  .drop .ic{
+    width:58px;height:58px;margin:0 auto 15px;border-radius:17px;
+    display:grid;place-items:center;font-size:25px;
+    background:linear-gradient(135deg,rgba(99,102,241,.28),rgba(236,72,153,.28));
+    border:1px solid rgba(255,255,255,.14);
+  }
+  .drop b{display:block;font-size:16.5px;font-weight:700;margin-bottom:7px}
+  .drop span{color:#8c99b4;font-size:12.5px}
+  #file{display:none}
+
+  /* ---------- Progress ---------- */
+  .bar{height:5px;border-radius:99px;background:rgba(255,255,255,.08);
+       overflow:hidden;margin-top:16px;display:none}
+  .bar i{display:block;height:100%;width:0;border-radius:99px;
+         background:linear-gradient(90deg,#6366f1,#ec4899);transition:width .25s}
+
+  /* ---------- Result card ---------- */
+  .card{
+    display:flex;gap:14px;align-items:center;margin-top:14px;padding:13px;
+    border-radius:16px;background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.11);
+    animation:pop .32s ease both;
+  }
+  @keyframes pop{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .card .thumb{
+    width:62px;height:62px;flex:none;border-radius:12px;object-fit:cover;
+    background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.1);
+  }
+  .card .info{flex:1;min-width:0}
+  .card .nm{font-size:12.5px;color:#aab6cf;margin-bottom:7px;
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card .row{display:flex;gap:8px}
+  .card input{
+    flex:1;min-width:0;font-size:12px;font-family:ui-monospace,Menlo,Consolas,monospace;
+    color:#7dd3fc;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.12);
+    border-radius:9px;padding:8px 10px;outline:none;
+  }
+  .card input:focus{border-color:#818cf8}
+  .btn{
+    flex:none;border:0;cursor:pointer;border-radius:9px;padding:8px 15px;
+    font-size:12.5px;font-weight:700;color:#fff;
+    background:linear-gradient(135deg,#6366f1,#8b5cf6);
+    transition:filter .18s,transform .18s;
+  }
+  .btn:hover{filter:brightness(1.15);transform:translateY(-1px)}
+  .btn.ok{background:linear-gradient(135deg,#10b981,#059669)}
+  .open{
+    display:inline-block;margin-top:7px;font-size:11.5px;color:#8c99b4;
+    text-decoration:none;border-bottom:1px dotted #475569;
+  }
+  .open:hover{color:#a5b4fc;border-color:#a5b4fc}
+
+  .err{
+    margin-top:14px;padding:12px 14px;border-radius:13px;font-size:13.5px;
+    background:rgba(239,68,68,.13);border:1px solid rgba(239,68,68,.42);color:#fca5a5;
+    animation:pop .3s ease both;
+  }
+
+  /* ---------- Gallery ---------- */
+  .sec{display:flex;align-items:center;gap:10px;margin:34px 0 13px}
+  .sec h2{font-size:12.5px;font-weight:700;color:#8c99b4;
+          text-transform:uppercase;letter-spacing:1.3px;white-space:nowrap}
+  .sec:after{content:"";flex:1;height:1px;background:rgba(255,255,255,.1)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:9px}
+  .grid a{display:block;border-radius:12px;overflow:hidden;
+          border:1px solid rgba(255,255,255,.1);transition:transform .18s,border-color .18s}
+  .grid a:hover{transform:translateY(-3px) scale(1.03);border-color:#818cf8}
+  .grid img{width:100%;height:92px;object-fit:cover;display:block;background:rgba(0,0,0,.3)}
+  .empty{color:#5b6680;font-size:13px;padding:14px 2px}
+
+  footer{text-align:center;color:#4e5a73;font-size:11.5px;margin-top:40px}
+
+  @media(max-width:480px){
+    body{padding:26px 13px 44px}
+    .drop{padding:32px 16px}
+    .card{flex-direction:column;align-items:stretch}
+    .card .thumb{width:100%;height:150px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo"><div class="dot">📷</div><h1>PhotoLink</h1></div>
+    <p>Photo upload karo — turant shareable link mil jayega</p>
+  </header>
+
+  <label class="drop" id="drop">
+    <div class="ic">⬆️</div>
+    <b>Photo yahan daalo ya click karo</b>
+    <span>JPG · PNG · GIF · WEBP &nbsp;|&nbsp; max 10 MB &nbsp;|&nbsp; ek saath 10 tak</span>
+    <input type="file" id="file" accept="image/*" multiple />
+  </label>
+
+  <div class="bar" id="bar"><i></i></div>
+  <div id="out"></div>
+
+  <div class="sec"><h2>Recent uploads</h2></div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty">Abhi tak koi photo upload nahi hui</div>
+
+  <footer>Apna khud ka image-hosting server 🚀</footer>
+</div>
+
+<script>
+const drop  = document.getElementById('drop');
+const file  = document.getElementById('file');
+const out   = document.getElementById('out');
+const bar   = document.getElementById('bar');
+const grid  = document.getElementById('grid');
+const empty = document.getElementById('empty');
+
+// Server sirf "/i/abc.png" bhejta hai. Poora link browser yahan banata hai —
+// isliye localhost / Codespaces / Render, har jagah link sahi banega.
+const full = p => location.origin + p;
+
+['dragover','dragenter'].forEach(e =>
+  drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(e =>
+  drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', ev => { if (ev.dataTransfer.files.length) send(ev.dataTransfer.files); });
+file.addEventListener('change', () => { if (file.files.length) send(file.files); });
+
+function send(files){
+  const fd = new FormData();
+  for (const f of files) fd.append('photos', f);
+  bar.style.display = 'block';
+  bar.firstElementChild.style.width = '8%';
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST','/upload');
+  xhr.upload.onprogress = e => {
+    if (e.lengthComputable)
+      bar.firstElementChild.style.width = (e.loaded / e.total * 95) + '%';
+  };
+  xhr.onload = () => {
+    bar.firstElementChild.style.width = '100%';
+    setTimeout(() => { bar.style.display='none'; bar.firstElementChild.style.width='0'; }, 550);
+    let r = {};
+    try { r = JSON.parse(xhr.responseText); } catch(e){}
+    if (!r.ok) return showErr((r && r.error) || 'Upload fail ho gaya');
+    r.files.forEach(show);
+    loadList();
+  };
+  xhr.onerror = () => { bar.style.display='none'; showErr('Network error — internet check karo'); };
+  xhr.send(fd);
+  file.value = '';
+}
+
+function showErr(msg){
+  const d = document.createElement('div');
+  d.className = 'err';
+  d.textContent = '⚠️  ' + msg;
+  out.prepend(d);
+  setTimeout(() => d.remove(), 6000);
+}
+
+function show(f){
+  const url = full(f.path);
+  const d = document.createElement('div');
+  d.className = 'card';
+
+  const img = document.createElement('img');
+  img.className = 'thumb'; img.src = url; img.alt = '';
+
+  const info = document.createElement('div');
+  info.className = 'info';
+
+  const nm = document.createElement('div');
+  nm.className = 'nm';
+  nm.textContent = f.name + '  ·  ' + (f.size/1024 < 1024
+      ? (f.size/1024).toFixed(0) + ' KB'
+      : (f.size/1048576).toFixed(1) + ' MB');
+
+  const row = document.createElement('div');
+  row.className = 'row';
+
+  const inp = document.createElement('input');
+  inp.readOnly = true; inp.value = url;
+  inp.onclick = () => inp.select();
+
+  const btn = document.createElement('button');
+  btn.className = 'btn'; btn.textContent = 'Copy';
+  btn.onclick = async () => {
+    try { await navigator.clipboard.writeText(url); }
+    catch(e) { inp.select(); document.execCommand('copy'); }
+    btn.textContent = 'Copied ✓'; btn.classList.add('ok');
+    setTimeout(() => { btn.textContent='Copy'; btn.classList.remove('ok'); }, 1600);
+  };
+
+  const open = document.createElement('a');
+  open.className = 'open'; open.href = url; open.target = '_blank';
+  open.textContent = '↗ Naye tab me kholkar dekho';
+
+  row.append(inp, btn);
+  info.append(nm, row, open);
+  d.append(img, info);
+  out.prepend(d);
+}
+
+async function loadList(){
+  try{
+    const r = await (await fetch('/api/list')).json();
+    empty.style.display = r.files.length ? 'none' : 'block';
+    grid.innerHTML = '';
+    r.files.forEach(f => {
+      const a = document.createElement('a');
+      a.href = full(f.path); a.target = '_blank';
+      const i = document.createElement('img');
+      i.src = full(f.path); i.loading = 'lazy'; i.alt = '';
+      a.append(i); grid.append(a);
+    });
+  }catch(e){}
+}
+loadList();
+</script>
+</body>
+</html>
