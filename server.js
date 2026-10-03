@@ -49,13 +49,14 @@ app.post('/upload', (req, res) => {
     if (!req.files || req.files.length === 0)
       return res.status(400).json({ ok: false, error: 'Koi file nahi mili' });
 
-    // Public base URL (hosting par apne-aap sahi domain lega)
-    const base = (req.headers['x-forwarded-proto'] || req.protocol) + '://' + req.get('host');
-
+    // NOTE: Yahan poora URL nahi banate. Kyun?
+    // Codespaces / proxy Host header ko "localhost:3000" bana dete hain,
+    // jisse link toot jaata hai. Isliye sirf RASTA (path) bhejte hain,
+    // aur browser khud apna sahi domain aage jod leta hai.
     const files = req.files.map((f) => ({
       name: f.originalname,
       size: f.size,
-      url: base + '/i/' + f.filename,
+      path: '/i/' + f.filename,
     }));
     res.json({ ok: true, files });
   });
@@ -63,13 +64,14 @@ app.post('/upload', (req, res) => {
 
 // 6) Saari uploaded photos ki list
 app.get('/api/list', (req, res) => {
-  const base = (req.headers['x-forwarded-proto'] || req.protocol) + '://' + req.get('host');
+  const IMG = /\.(jpe?g|png|gif|webp|svg|bmp)$/i; // sirf image files
   const files = fs
     .readdirSync(UPLOAD_DIR)
+    .filter((n) => IMG.test(n))
     .map((n) => ({ n, t: fs.statSync(path.join(UPLOAD_DIR, n)).mtimeMs }))
     .sort((a, b) => b.t - a.t)
     .slice(0, 60)
-    .map((f) => ({ url: base + '/i/' + f.n }));
+    .map((f) => ({ path: '/i/' + f.n }));
   res.json({ ok: true, files });
 });
 
