@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PhotoLink — Photo upload karo, link pao</title>
+<title>Upload a photo, get a link</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
 
@@ -135,13 +135,13 @@
 
   <header>
     <div class="logo"><div class="dot">📷</div><h1>PhotoLink</h1></div>
-    <p>Photo upload karo — turant shareable link mil jayega</p>
+    <p>Upload a photo — get an instant shareable link</p>
   </header>
 
   <label class="drop" id="drop">
     <div class="ic">⬆️</div>
-    <b>Photo yahan daalo ya click karo</b>
-    <span>JPG · PNG · GIF · WEBP &nbsp;|&nbsp; max 10 MB &nbsp;|&nbsp; ek saath 10 tak</span>
+    <b>Drop your photo here or click to browse</b>
+    <span>JPG · PNG · GIF · WEBP &nbsp;|&nbsp; max 10 MB &nbsp;|&nbsp; up to 10 at once</span>
     <input type="file" id="file" accept="image/*" multiple />
   </label>
 
@@ -150,9 +150,9 @@
 
   <div class="sec"><h2>Recent uploads</h2></div>
   <div class="grid" id="grid"></div>
-  <div class="empty" id="empty">Abhi tak koi photo upload nahi hui</div>
+  <div class="empty" id="empty">No photos uploaded yet</div>
 
-  <footer>Apna khud ka image-hosting server 🚀</footer>
+  <footer>Your own image hosting server 🚀</footer>
 </div>
 
 <script>
@@ -243,7 +243,7 @@ function show(f){
 
   const open = document.createElement('a');
   open.className = 'open'; open.href = url; open.target = '_blank';
-  open.textContent = '↗ Naye tab me kholkar dekho';
+  open.textContent = '↗ Open in a new tab';
 
   row.append(inp, btn);
   info.append(nm, row, open);

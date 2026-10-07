@@ -34,7 +34,7 @@ const upload = multer({
   fileFilter: (req, file, cb) => {
     const ok = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/bmp'];
     if (ok.includes(file.mimetype)) cb(null, true);
-    else cb(new Error('Sirf image file allowed hai (jpg, png, gif, webp)'));
+    else cb(new Error('Only image files are allowed... (jpg, png, gif, webp)'));
   },
 });
 
@@ -47,7 +47,7 @@ app.post('/upload', (req, res) => {
   upload.array('photos', 10)(req, res, (err) => {
     if (err) return res.status(400).json({ ok: false, error: err.message });
     if (!req.files || req.files.length === 0)
-      return res.status(400).json({ ok: false, error: 'Koi file nahi mili' });
+      return res.status(400).json({ ok: false, error: 'No file received' });
 
     // NOTE: Yahan poora URL nahi banate. Kyun?
     // Codespaces / proxy Host header ko "localhost:3000" bana dete hain,
@@ -76,5 +76,5 @@ app.get('/api/list', (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log('Server chal raha hai:  http://localhost:' + PORT);
+  console.log('Server running:  http://localhost:' + PORT);
 });
