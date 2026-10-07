@@ -15,6 +15,7 @@ const PORT = process.env.PORT || 3000;
 
 // 1) uploads folder (yahin photos save hongi)
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
+const IMG_RE = /\.(jpe?g|png|gif|webp|svg|bmp)$/i; // kaunsi files image maani jayengi
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 // 2) File kahan aur kis naam se save ho
@@ -64,15 +65,39 @@ app.post('/upload', (req, res) => {
 
 // 6) Saari uploaded photos ki list
 app.get('/api/list', (req, res) => {
-  const IMG = /\.(jpe?g|png|gif|webp|svg|bmp)$/i; // sirf image files
   const files = fs
     .readdirSync(UPLOAD_DIR)
-    .filter((n) => IMG.test(n))
+    .filter((n) => IMG_RE.test(n))
     .map((n) => ({ n, t: fs.statSync(path.join(UPLOAD_DIR, n)).mtimeMs }))
     .sort((a, b) => b.t - a.t)
     .slice(0, 60)
     .map((f) => ({ path: '/i/' + f.n }));
   res.json({ ok: true, files });
+});
+
+// 7) Ek photo delete karo
+app.delete('/api/delete/:name', (req, res) => {
+  // path.basename safety ke liye: koi "../" likhkar dusre folder tak na pahunch sake
+  const name = path.basename(req.params.name || '');
+  if (!IMG_RE.test(name)) return res.status(400).json({ ok: false, error: 'Invalid file name' });
+
+  const target = path.join(UPLOAD_DIR, name);
+  if (!fs.existsSync(target)) return res.status(404).json({ ok: false, error: 'File not found' });
+
+  fs.unlinkSync(target);
+  res.json({ ok: true, deleted: name });
+});
+
+// 8) Saari photos delete (Clear all)
+app.delete('/api/clear', (req, res) => {
+  let count = 0;
+  fs.readdirSync(UPLOAD_DIR)
+    .filter((n) => IMG_RE.test(n))
+    .forEach((n) => {
+      fs.unlinkSync(path.join(UPLOAD_DIR, n));
+      count++;
+    });
+  res.json({ ok: true, deleted: count });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
